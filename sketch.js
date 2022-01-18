@@ -1,14 +1,16 @@
 var gui;
 var resetButton;
 var landscapeLayer;
-var org_test;
+var population = [];
+
+var pop_size = 10;
 var world_x = 800;
 var world_y = 600;
 
 
 function Organism() {
-    this.x = 10;
-    this.y = 10;
+    this.x = int(random(0, world_x));
+    this.y = int(random(0, world_y));
 }
 
 //"Sketching" a fitness function for starters
@@ -45,7 +47,10 @@ Organism.prototype.draw = function() {
 
 function setup() {
   createCanvas(800, 600);
-  org_test = new Organism();
+  
+  for (let i=0; i < pop_size; i++) {
+    population.push(new Organism());
+  }
 
   landscapeLayer = createGraphics(world_x,world_y);
   gui = createGui();
@@ -59,16 +64,19 @@ function draw() {
     landscapeLayer.noStroke();
     landscapeLayer.ellipse(mouseX, mouseY, 20, 20);
   }
+
   if (resetButton.isPressed) {
-    console.log(org_test);
-    console.log(org_test.getFitness());
     resetWorld();
   }
   
   clear();
+
   image(landscapeLayer, 0, 0)
-  org_test.draw();
-  org_test.mutate();
+  
+  for (org of population) {
+    org.draw()
+  }
+
   drawGui();
 }
 
