@@ -97,7 +97,7 @@ function update_pop_size(new_pop_size) {
 function setup() {
   createCanvas(800, 600);
   
-  gui = createGui('Fitness Landscape Controlls', 820, 20);
+  gui = createGui('Fitness Landscape Controls', 820, 20);
   gui.addGlobals('PopulationSize','MutationSize', 'Speed', 'Eraser', 'DensityDependence', 'SexualRecombination');
   gui.addButton("Clear", () => {landscapeLayer.clear();});
 
@@ -149,7 +149,6 @@ function draw() {
       org_to_replace.x = _.sample(possible_xs);
       org_to_replace.y = _.sample(possible_ys);
       org_to_replace.mutate();
-
 
     }
   }
