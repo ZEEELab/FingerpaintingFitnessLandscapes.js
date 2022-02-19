@@ -1,7 +1,11 @@
 var landscapeLayer;
 var population = [];
 
-var PopulationSize = 800;
+var PopulationSize = 600;
+var PopulationSizeMin = 1;
+var PopulationSizeMax = 2000;
+var PopulationSizeStep = 1;
+
 var world_x = 800;
 var world_y = 600;
 
