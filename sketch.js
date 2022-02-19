@@ -1,7 +1,7 @@
 var landscapeLayer;
 var population = [];
 
-var pop_size = 300;
+var PopulationSize = 800;
 var world_x = 800;
 var world_y = 600;
 var StepsPerFrame = 20;
@@ -20,7 +20,7 @@ function Organism() {
 
 //"Sketching" a fitness function for starters
 Organism.prototype.getFitness = function () {
-  //might have to combine future layers...?
+  //Faster to access image buffer directly? 
   let spot_color = landscapeLayer.get(this.x, this.y);
   if(DensityDependence) {
     return spot_color[3] - densityDependentLayer.get(this.x, this.y)[3];
@@ -63,18 +63,33 @@ function tournament_select(num_to_compete) {
   //_.sample(population, num_to_compete)
   tournament = _.sampleSize(population, num_to_compete)
   return _.maxBy(tournament, iteratee=(value)=>value.getFitness())
+}
 
+function update_pop_size(new_pop_size) {
+  //shrink the population
+  let pop_offset = new_pop_size - population.length;
+
+  //grow population
+  if (pop_offset > 0) {
+    for (let i=0; i < pop_offset; i++) {
+      population.push(new Organism());
+    }
+  } else if (pop_offset < 0) {
+    for (let i=0; i < -pop_offset; i++) {
+      population.pop();
+    }
+  }
 }
 
 function setup() {
   createCanvas(800, 600);
   
   gui = createGui('Fitness Landscape Controlls');
-  gui.addGlobals('MutationSize', 'StepsPerFrame', 'Eraser', 'DensityDependence');
+  gui.addGlobals('PopulationSize','MutationSize', 'StepsPerFrame', 'Eraser', 'DensityDependence');
   gui.setPosition(820,20);
 
   
-  for (let i=0; i < pop_size; i++) {
+  for (let i=0; i < PopulationSize; i++) {
     population.push(new Organism());
   }
 
@@ -88,13 +103,15 @@ function draw() {
     landscapeLayer.noErase();
     landscapeLayer.fill(0, 0, 0, 5);
     landscapeLayer.noStroke();
-    landscapeLayer.ellipse(mouseX, mouseY, 20, 20);
+    landscapeLayer.ellipse(mouseX, mouseY, 40, 40);
   } else if(mouseIsPressed && Eraser==true) {
     landscapeLayer.noStroke();
     landscapeLayer.erase()
     landscapeLayer.ellipse(mouseX, mouseY, 20, 20);
   }
 
+  update_pop_size(PopulationSize);
+  
   //pick random organisms to replace with `moran_steps_per_draw` 
   //selected individuals
   for (let i=0; i < StepsPerFrame; i++) {
@@ -103,6 +120,7 @@ function draw() {
 
   clear();
   densityDependentLayer.clear();
+
   image(landscapeLayer, 0, 0)
   for (org of population) {
     if (DensityDependence) {
@@ -110,9 +128,8 @@ function draw() {
       densityDependentLayer.noStroke();
       densityDependentLayer.ellipse(org.x, org.y, 20,20);
 
-      fill(255, 25)
+      fill(255, 15)
       ellipse(org.x, org.y, 20,20)
-
     }
     org.draw()
   }
