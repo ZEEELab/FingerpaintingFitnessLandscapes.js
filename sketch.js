@@ -14,10 +14,13 @@ var SpeedMin = 0.05;
 var SpeedMax = 1.5;
 var SpeedStep = 0.05;
 
-var tournament_k = 3;
-var MutationSize = 50;
+var tournament_k = 5;
+var MutationSize = 15;
+var MutationSizeMin = 1;
+var MutationSizeMax= 100;
 var Eraser = false;
 var DensityDependence = false;
+var SexualRecombination = false;
 var densityDependentLayer;
 
 
@@ -64,7 +67,7 @@ Organism.prototype.mutate = function() {
 
 }
 Organism.prototype.draw = function() {
-  fill('orange');
+  fill('#FFCB05');
   noStroke();
   ellipse(this.x, this.y, 5, 5);
 }
@@ -95,7 +98,7 @@ function setup() {
   createCanvas(800, 600);
   
   gui = createGui('Fitness Landscape Controlls', 820, 20);
-  gui.addGlobals('PopulationSize','MutationSize', 'Speed', 'Eraser', 'DensityDependence');
+  gui.addGlobals('PopulationSize','MutationSize', 'Speed', 'Eraser', 'DensityDependence', 'SexualRecombination');
   gui.addButton("Clear", () => {landscapeLayer.clear();});
 
   //gui.setPosition(820,20);
@@ -130,7 +133,25 @@ function draw() {
   //selected individuals
   let moran_steps = Math.floor(Speed * population.length);
   for (let i=0; i < moran_steps; i++) {
-    _.sample(population).overwriteWith(tournament_select(tournament_k)).mutate();
+
+    if(SexualRecombination==false) {
+      _.sample(population).overwriteWith(tournament_select(tournament_k)).mutate();
+    } else {
+      //pick two parents and recombine them
+      parent1 = tournament_select(tournament_k);
+      parent2 = tournament_select(tournament_k);
+
+      possible_xs = [parent1.x, parent2.x];
+      possible_ys = [parent1.y, parent2.y];
+
+      org_to_replace = _.sample(population);
+
+      org_to_replace.x = _.sample(possible_xs);
+      org_to_replace.y = _.sample(possible_ys);
+      org_to_replace.mutate();
+
+
+    }
   }
 
   clear();
@@ -146,6 +167,7 @@ function draw() {
       fill(255, 15)
       ellipse(org.x, org.y, 20,20)
     }
+
     org.draw()
   }
   //densityDependentLayer.blend(landscapeLayer, 0, 0, world_x, world_y, 0, 0, world_x, world_y, ADD)
