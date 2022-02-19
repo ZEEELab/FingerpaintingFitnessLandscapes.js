@@ -4,7 +4,12 @@ var population = [];
 var PopulationSize = 800;
 var world_x = 800;
 var world_y = 600;
-var StepsPerFrame = 20;
+
+var Speed = 0.5;
+var SpeedMin = 0.05;
+var SpeedMax = 1.5;
+var SpeedStep = 0.05;
+
 var tournament_k = 3;
 var MutationSize = 50;
 var Eraser = false;
@@ -85,7 +90,7 @@ function setup() {
   createCanvas(800, 600);
   
   gui = createGui('Fitness Landscape Controlls');
-  gui.addGlobals('PopulationSize','MutationSize', 'StepsPerFrame', 'Eraser', 'DensityDependence');
+  gui.addGlobals('PopulationSize','MutationSize', 'Speed', 'Eraser', 'DensityDependence');
   gui.setPosition(820,20);
 
   
@@ -111,10 +116,11 @@ function draw() {
   }
 
   update_pop_size(PopulationSize);
-  
+
   //pick random organisms to replace with `moran_steps_per_draw` 
   //selected individuals
-  for (let i=0; i < StepsPerFrame; i++) {
+  let moran_steps = Math.floor(Speed * population.length);
+  for (let i=0; i < moran_steps; i++) {
     _.sample(population).overwriteWith(tournament_select(tournament_k)).mutate();
   }
 
