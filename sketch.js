@@ -20,6 +20,7 @@ var Eraser = false;
 var DensityDependence = false;
 var densityDependentLayer;
 
+
 var gui;
 
 function Organism() {
@@ -93,9 +94,13 @@ function update_pop_size(new_pop_size) {
 function setup() {
   createCanvas(800, 600);
   
-  gui = createGui('Fitness Landscape Controlls');
+  gui = createGui('Fitness Landscape Controlls', 820, 20);
   gui.addGlobals('PopulationSize','MutationSize', 'Speed', 'Eraser', 'DensityDependence');
-  gui.setPosition(820,20);
+  gui.addButton("Clear", () => {landscapeLayer.clear();});
+
+  //gui.setPosition(820,20);
+
+
 
   
   for (let i=0; i < PopulationSize; i++) {
