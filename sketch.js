@@ -79,6 +79,8 @@ function setup() {
   }
 
   landscapeLayer = createGraphics(world_x,world_y);
+  densityDependentLayer = createGraphics(world_x,world_y);
+
 }
 
 function draw() {
@@ -100,8 +102,7 @@ function draw() {
   }
 
   clear();
-  densityDependentLayer = createGraphics(world_x,world_y);
-  
+  densityDependentLayer.clear();
   image(landscapeLayer, 0, 0)
   for (org of population) {
     if (DensityDependence) {
