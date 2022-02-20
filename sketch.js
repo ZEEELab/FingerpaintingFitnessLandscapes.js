@@ -95,9 +95,11 @@ function update_pop_size(new_pop_size) {
 }
 
 function setup() {
-  createCanvas(800, 600);
-  
-  gui = createGui('Fitness Landscape Controls', 820, 20);
+  let my_canvas = createCanvas(800, 600);
+  my_canvas.parent("p5container");
+
+  gui = createGui('Fitness Landscape Controls', 820, 90);
+
   gui.addGlobals('PopulationSize','MutationSize', 'Speed', 'Eraser', 'DensityDependence', 'SexualRecombination');
   gui.addButton("Clear", () => {landscapeLayer.clear();});
 
