@@ -143,13 +143,10 @@ function draw() {
       parent1 = tournament_select(tournament_k);
       parent2 = tournament_select(tournament_k);
 
-      possible_xs = [parent1.x, parent2.x];
-      possible_ys = [parent1.y, parent2.y];
-
       org_to_replace = _.sample(population);
 
-      org_to_replace.x = _.sample(possible_xs);
-      org_to_replace.y = _.sample(possible_ys);
+      org_to_replace.x = (parent1.x + parent2.x) / 2;
+      org_to_replace.y = (parent1.y + parent2.y) / 2;
       org_to_replace.mutate();
 
     }
