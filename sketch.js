@@ -48,6 +48,7 @@ Organism.prototype.overwriteWith = function(otherOrg) {
 }
 
 Organism.prototype.mutate = function() {
+  /*
   let mutate_x = random() < 0.5? 0 : 1;
   let mutate_positive = random() < 0.5? 0 : 1;
   //integer mutation sizes
@@ -58,6 +59,10 @@ Organism.prototype.mutate = function() {
   } else {
     this.y += mutation_offset;
   }
+  */
+
+  this.x += random(-MutationSize, MutationSize);
+  this.y += random(-MutationSize, MutationSize);
 
   //torus topology
   this.x = this.x < 0 ? world_x + this.x : this.x;
