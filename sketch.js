@@ -23,6 +23,8 @@ var DensityDependence = false;
 var SexualRecombination = false;
 var densityDependentLayer;
 
+var landscape_upload;
+
 
 var gui;
 
@@ -99,20 +101,37 @@ function update_pop_size(new_pop_size) {
   }
 }
 
+handleFile = function(file) {
+  landscapeLayer.clear();
+  let rows = split(file.data, '\n');
+  for (let i=0; i<rows.length;i++) {
+    let col_vals = split(rows[i], ',');
+    for (let j=0; j<col_vals.length; j++) {
+      //console.log(int(col_vals[j]));
+      landscapeLayer.set(i,j, color(0,0,0,parseInt(col_vals[j])));
+    }
+  }
+  landscapeLayer.updatePixels();
+}
+
+function load_landscape() {
+  landscape_upload.elt.click();
+}
+
 function setup() {
   let my_canvas = createCanvas(800, 600);
   my_canvas.parent("p5container");
 
-  gui = createGui('Fitness Landscape Controls', 820, 90);
+  gui = createGui('Fitness Landscape Controls', 820, 67);
 
   gui.addGlobals('PopulationSize','MutationSize', 'Speed', 'Eraser', 'DensityDependence', 'SexualRecombination');
   gui.addButton("Clear", () => {landscapeLayer.clear();});
+  gui.addButton("Load Landscape", () => {load_landscape();});
+  landscape_upload = createFileInput(handleFile);
+  landscape_upload.hide();
 
   //gui.setPosition(820,20);
 
-
-
-  
   for (let i=0; i < PopulationSize; i++) {
     population.push(new Organism());
   }
