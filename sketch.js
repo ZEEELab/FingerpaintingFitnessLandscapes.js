@@ -20,7 +20,14 @@ var MutationSizeMin = 1;
 var MutationSizeMax= 100;
 var Eraser = false;
 var DensityDependence = false;
-var SexualRecombination = false;
+
+var RecombinationRate = 0.0;
+var RecombinationRateMin = 0;
+var RecombinationRateMax = 1.0;
+var RecombinationRateStep = 0.05;
+
+var DiscreteRecombination = false;
+
 var densityDependentLayer;
 
 var landscape_upload;
@@ -124,7 +131,7 @@ function setup() {
 
   gui = createGui('Fitness Landscape Controls', 820, 67);
 
-  gui.addGlobals('PopulationSize','MutationSize', 'Speed', 'Eraser', 'DensityDependence', 'SexualRecombination');
+  gui.addGlobals('PopulationSize','MutationSize', 'RecombinationRate', 'Speed', 'Eraser', 'DensityDependence', 'DiscreteRecombination');
   gui.addButton("Clear", () => {landscapeLayer.clear();});
   gui.addButton("Load Landscape", () => {load_landscape();});
   landscape_upload = createFileInput(handleFile);
@@ -139,6 +146,31 @@ function setup() {
   landscapeLayer = createGraphics(world_x,world_y);
   densityDependentLayer = createGraphics(world_x,world_y);
 
+}
+function do_asexual_step() {
+  _.sample(population).overwriteWith(tournament_select(tournament_k)).mutate();
+}
+
+function do_sexual_step() {
+  //pick two parents and recombine them
+  parent1 = tournament_select(tournament_k);
+  parent2 = tournament_select(tournament_k);
+
+  org_to_replace = _.sample(population);
+
+  if(DiscreteRecombination == false) {
+    org_to_replace.x = (parent1.x + parent2.x) / 2;
+    org_to_replace.y = (parent1.y + parent2.y) / 2;
+  }
+  else {
+    xs = [parent1.x, parent2.x];
+    ys = [parent1.y, parent2.y];
+
+    org_to_replace.x = _.sample(xs);
+    org_to_replace.y = _.sample(ys);
+  }
+
+  org_to_replace.mutate();
 }
 
 function draw() {
@@ -159,21 +191,7 @@ function draw() {
   //selected individuals
   let moran_steps = Math.floor(Speed * population.length);
   for (let i=0; i < moran_steps; i++) {
-
-    if(SexualRecombination==false) {
-      _.sample(population).overwriteWith(tournament_select(tournament_k)).mutate();
-    } else {
-      //pick two parents and recombine them
-      parent1 = tournament_select(tournament_k);
-      parent2 = tournament_select(tournament_k);
-
-      org_to_replace = _.sample(population);
-
-      org_to_replace.x = (parent1.x + parent2.x) / 2;
-      org_to_replace.y = (parent1.y + parent2.y) / 2;
-      org_to_replace.mutate();
-
-    }
+    random() < RecombinationRate ? do_sexual_step() : do_asexual_step() ;
   }
 
   clear();
