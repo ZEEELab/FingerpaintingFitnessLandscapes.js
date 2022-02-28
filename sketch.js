@@ -1,10 +1,9 @@
 var landscapeLayer;
-var population = [];
 
-var PopulationSize = 600;
-var PopulationSizeMin = 1;
-var PopulationSizeMax = 2000;
-var PopulationSizeStep = 1;
+var host_population = [];
+var para_population = [];
+var population = [];
+var PopulationSize = 800;
 
 var world_x = 800;
 var world_y = 600;
@@ -30,82 +29,86 @@ var DiscreteRecombination = false;
 
 var densityDependentLayer;
 
+var hostLayer;
+var paraLayer;
+
+
 var landscape_upload;
 
 
 var gui;
 
 function Organism() {
-    this.x = int(random(0, world_x));
-    this.y = int(random(0, world_y));
+  this.x = int(random(0, world_x));
+  this.y = int(random(0, world_y));
+
+  this.overwriteWith = (otherOrg) => {
+    this.x = otherOrg.x;
+    this.y = otherOrg.y;
+    return this;
+  }
+
+  this.mutate = () => {
+    this.x += random(-MutationSize, MutationSize);
+    this.y += random(-MutationSize, MutationSize);
+  
+    //torus topology
+    this.x = this.x < 0 ? world_x + this.x : this.x;
+    this.y = this.y < 0 ? world_y + this.y : this. y;
+    this.x = this.x % world_x;
+    this.y = this.y % world_y;
+  }
+};
+
+function Parasite() {
+  Organism.call(this);
+}
+
+function Host() {
+  Organism.call(this);
 }
 
 //"Sketching" a fitness function for starters
-Organism.prototype.getFitness = function () {
+Host.prototype.getFitness = function () {
   //Faster to access image buffer directly? 
-  let spot_color = landscapeLayer.get(this.x, this.y);
+  let bg_fitness = landscapeLayer.get(this.x, this.y)[3];
+  let para_fitness = - paraLayer.get(this.x, this.y)[3];
+
   if(DensityDependence) {
-    return spot_color[3] - densityDependentLayer.get(this.x, this.y)[3];
+    return (bg_fitness + para_fitness) - densityDependentLayer.get(this.x, this.y)[3];
   }
+
+  return bg_fitness + para_fitness;
+}
+
+Parasite.prototype.getFitness = function () {
+  //Faster to access image buffer directly? 
+  let spot_color = hostLayer.get(this.x, this.y);
   return spot_color[3];
 }
 
-Organism.prototype.overwriteWith = function(otherOrg) {
-  this.x = otherOrg.x;
-  this.y = otherOrg.y;
-  return this;
-}
-
-Organism.prototype.mutate = function() {
-  /*
-  let mutate_x = random() < 0.5? 0 : 1;
-  let mutate_positive = random() < 0.5? 0 : 1;
-  //integer mutation sizes
-  let mutation_offset = mutate_positive? random(MutationSize) : -random(MutationSize);
-
-  if (mutate_x) {
-    this.x += mutation_offset;
-  } else {
-    this.y += mutation_offset;
-  }
-  */
-
-  this.x += random(-MutationSize, MutationSize);
-  this.y += random(-MutationSize, MutationSize);
-
-  //torus topology
-  this.x = this.x < 0 ? world_x + this.x : this.x;
-  this.y = this.y < 0 ? world_y + this.y : this. y;
-  this.x = this.x % world_x;
-  this.y = this.y % world_y;
-
-}
-Organism.prototype.draw = function() {
-  fill('#FFCB05');
-  noStroke();
+Host.prototype.draw = function() {
+  fill('#6C33FF');
+  stroke(0);
   ellipse(this.x, this.y, 5, 5);
+  noStroke();
+  fill(254,127,45,5);
+  ellipse(this.x, this.y, 50, 50);
 }
 
-function tournament_select(num_to_compete) {
-  //_.sample(population, num_to_compete)
-  tournament = _.sampleSize(population, num_to_compete)
+Parasite.prototype.draw = function() {
+  fill('#FE7F2D');
+  stroke(255);
+  ellipse(this.x, this.y, 5, 5);
+  noStroke();
+  fill(254,255,255,5);
+  ellipse(this.x, this.y, 50, 50);
+
+}
+
+function tournament_select(pop, num_to_compete) {
+  tournament = _.sampleSize(pop, num_to_compete)
   return _.maxBy(tournament, iteratee=(value)=>value.getFitness())
-}
-
-function update_pop_size(new_pop_size) {
-  //shrink the population
-  let pop_offset = new_pop_size - population.length;
-
-  //grow population
-  if (pop_offset > 0) {
-    for (let i=0; i < pop_offset; i++) {
-      population.push(new Organism());
-    }
-  } else if (pop_offset < 0) {
-    for (let i=0; i < -pop_offset; i++) {
-      population.pop();
-    }
-  }
 }
 
 handleFile = function(file) {
@@ -131,7 +134,7 @@ function setup() {
 
   gui = createGui('Fitness Landscape Controls', 820, 67);
 
-  gui.addGlobals('PopulationSize','MutationSize', 'RecombinationRate', 'Speed', 'Eraser', 'DensityDependence', 'DiscreteRecombination');
+  gui.addGlobals('MutationSize', 'RecombinationRate', 'Speed', 'Eraser', 'DensityDependence', 'DiscreteRecombination');
   gui.addButton("Clear", () => {landscapeLayer.clear();});
   gui.addButton("Load Landscape", () => {load_landscape();});
   landscape_upload = createFileInput(handleFile);
@@ -139,24 +142,31 @@ function setup() {
 
   //gui.setPosition(820,20);
 
-  for (let i=0; i < PopulationSize; i++) {
-    population.push(new Organism());
+  for (let i=0; i < PopulationSize/2; i++) {
+    host_population.push(new Host());
+  }
+  for (let i=0; i < PopulationSize/2; i++) {
+    para_population.push(new Parasite());
   }
 
   landscapeLayer = createGraphics(world_x,world_y);
   densityDependentLayer = createGraphics(world_x,world_y);
+  
+  hostLayer = createGraphics(world_x, world_y);
+  paraLayer = createGraphics(world_x, world_y);
+
 
 }
-function do_asexual_step() {
-  _.sample(population).overwriteWith(tournament_select(tournament_k)).mutate();
+function do_asexual_step(pop) {
+  _.sample(pop).overwriteWith(tournament_select(pop, tournament_k)).mutate();
 }
 
-function do_sexual_step() {
+function do_sexual_step(pop) {
   //pick two parents and recombine them
-  parent1 = tournament_select(tournament_k);
-  parent2 = tournament_select(tournament_k);
+  parent1 = tournament_select(pop, tournament_k);
+  parent2 = tournament_select(pop, tournament_k);
 
-  org_to_replace = _.sample(population);
+  org_to_replace = _.sample(pop);
 
   if(DiscreteRecombination == false) {
     org_to_replace.x = (parent1.x + parent2.x) / 2;
@@ -185,20 +195,21 @@ function draw() {
     landscapeLayer.ellipse(mouseX, mouseY, 20, 20);
   }
 
-  update_pop_size(PopulationSize);
-
   //pick random organisms to replace with `moran_steps_per_draw` 
   //selected individuals
-  let moran_steps = Math.floor(Speed * population.length);
+  let moran_steps = Math.floor(Speed * (host_population.length+para_population.length));
   for (let i=0; i < moran_steps; i++) {
-    random() < RecombinationRate ? do_sexual_step() : do_asexual_step() ;
+    let pop_to_update = random() < 0.5 ? host_population : para_population;
+    random() < RecombinationRate ? do_sexual_step(pop_to_update) : do_asexual_step(pop_to_update) ;
   }
 
   clear();
   densityDependentLayer.clear();
+  hostLayer.clear();
+  paraLayer.clear();
 
   image(landscapeLayer, 0, 0)
-  for (org of population) {
+  for (org of host_population) {
     if (DensityDependence) {
       densityDependentLayer.fill(255, 15);
       densityDependentLayer.noStroke();
@@ -208,7 +219,19 @@ function draw() {
       ellipse(org.x, org.y, 20,20)
     }
 
+    hostLayer.fill(0, 20);
+    hostLayer.noStroke();
+    hostLayer.ellipse(org.x, org.y, 50,50);
+
+
     org.draw()
+  }
+  for (org of para_population) {
+    paraLayer.fill(0, 20);
+    paraLayer.noStroke();
+    paraLayer.ellipse(org.x, org.y, 50, 50);
+    
+    org.draw();
   }
   //densityDependentLayer.blend(landscapeLayer, 0, 0, world_x, world_y, 0, 0, world_x, world_y, ADD)
 }
